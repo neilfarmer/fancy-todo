@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>To-Do List</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background: #f3f4f6;
+        margin: 0;
+        padding: 2rem;
+        color: #111827;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #ffffff;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+      }
+      form {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+      }
+      input[type="text"] {
+        flex-grow: 1;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 1rem;
+      }
+      button {
+        padding: 0.75rem 1.25rem;
+        background-color: #3b82f6;
+        border: none;
+        color: white;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+      li {
+        background: #f9fafb;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        word-wrap: break-word;
+        overflow-wrap: anywhere;
+      }
+      .empty {
+        text-align: center;
+        color: #6b7280;
+        font-style: italic;
+      }
+      .delete-form {
+        margin: 0;
+      }
+      .delete-btn {
+        background: none;
+        border: none;
+        color: #ef4444;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .delete-btn:hover {
+        color: #b91c1c;
+      }
+      .task-text {
+        max-width: 80%;
+        word-wrap: break-word;
+        overflow-wrap: anywhere;
+      }
+      .task-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+      .navbar {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .nav-link {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1rem;
+      }
+      form {
+        margin: 0;
+        padding: 0;
+      }
+      .nav-link:hover {
+        text-decoration: underline;
+        color: #2563eb;
+      }
+      .complete-btn {
+        background: none;
+        border: none;
+        color: #10b981; /* green */
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        margin-left: 0.5rem;
+      }
+      .complete-btn {
+        color: #10b981; /* green */
+      }
+      .delete-btn {
+        color: #ef4444; /* red */
+      }
+      .revert-btn {
+        color: #3b82f6; /* blue */
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <a href="/" class="nav-link">Active Tasks</a>
+      <a href="/completed" class="nav-link">Completed Tasks</a>
+    </nav>
+    <div class="container">
+      <h1>✨ My Fancy To-Do App ✨</h1>
+
+      <form method="POST">
+        <input
+          type="text"
+          name="task"
+          placeholder="What misery awaits?"
+          required
+        />
+        <button type="submit">Add</button>
+      </form>
+
+      <ul>
+        {% for task in todos %}
+        <li>
+          <div class="task-text" onclick="toggleDropdown(this)">
+            {{ task.text }}
+          </div>
+          <div
+            class="dropdown"
+            style="display: none; font-size: 0.875rem; color: #6b7280"
+          >
+            Created on {{ task.created | datetimeformat }}
+          </div>
+          <div class="task-actions">
+            <form method="POST" action="/complete/{{ loop.index0 }}">
+              <button
+                class="complete-btn"
+                type="submit"
+                title="Mark as completed"
+              >
+                ✅
+              </button>
+            </form>
+            <form method="POST" action="/delete/{{ loop.index0 }}">
+              <button
+                class="delete-btn"
+                type="submit"
+                title="Delete permanently"
+              >
+                ❌
+              </button>
+            </form>
+          </div>
+        </li>
+        {% else %}
+        <li class="empty">No tasks yet. So free. So empty. So... sad.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </body>
+</html>
+<script>
+  function toggleDropdown(el) {
+    const dropdown = el.nextElementSibling;
+    if (dropdown && dropdown.classList.contains("dropdown")) {
+      dropdown.style.display =
+        dropdown.style.display === "none" ? "block" : "none";
+    }
+  }
+</script>
