@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>To-Do List</title>
+    <title>Notes List</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
       rel="stylesheet"
@@ -28,17 +28,33 @@
         color: #1f2937;
         margin-bottom: 1.5rem;
       }
-      form {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
+      .accordion {
+        margin-bottom: 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
       }
-      input[type="text"] {
-        flex-grow: 1;
+      .accordion-header {
+        padding: 0.75rem;
+        background: #f9fafb;
+        cursor: pointer;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .accordion-body {
+        display: none;
+        padding: 1rem;
+        border-top: 1px solid #d1d5db;
+      }
+      input[type="text"],
+      textarea {
+        width: 100%;
         padding: 0.75rem;
         border: 1px solid #d1d5db;
         border-radius: 8px;
         font-size: 1rem;
+        margin-bottom: 0.5rem;
       }
       button {
         padding: 0.75rem 1.25rem;
@@ -85,12 +101,12 @@
       .delete-btn:hover {
         color: #b91c1c;
       }
-      .task-text {
+      .note-text {
         max-width: 80%;
         word-wrap: break-word;
         overflow-wrap: anywhere;
       }
-      .task-actions {
+      .note-actions {
         display: flex;
         gap: 0.5rem;
       }
@@ -144,53 +160,62 @@
     <div class="container">
       <h1>✨ My Fancy To-Do App ✨</h1>
 
-      <form method="POST">
-        <input
-          type="text"
-          name="task"
-          placeholder="What misery awaits?"
-          required
-        />
-        <button type="submit">Add</button>
+      <form method="POST" action="/add_note" style="margin-bottom: 2rem">
+        <input type="text" name="title" placeholder="Title" required />
+        <textarea name="content" placeholder="Content" required></textarea>
+        <button type="submit">Save Note</button>
       </form>
 
-      <ul>
-        {% for task in todos %}
-        <li>
-          <div class="task-text" onclick="toggleDropdown(this)">
-            {{ task.text }}
-          </div>
+      <div id="notes-list">
+        {% for note in notes %}
+        <div class="accordion">
           <div
-            class="dropdown"
-            style="display: none; font-size: 0.875rem; color: #6b7280"
+            class="accordion-header"
+            onclick="toggleAccordion('note-{{ loop.index0 }}')"
           >
-            Created on {{ task.created | datetimeformat }}
-          </div>
-          <div class="task-actions">
-            <form method="POST" action="/complete/{{ loop.index0 }}">
+            <span>{{ note.title }}</span>
+            <span
+              style="margin-left: auto; cursor: pointer"
+              title="Edit"
+              onclick="event.stopPropagation(); toggleAccordion('note-{{ loop.index0 }}')"
+              >✏️</span
+            >
+            <form
+              method="POST"
+              action="/delete_note/{{ loop.index0 }}"
+              style="margin: 0"
+            >
               <button
-                class="complete-btn"
                 type="submit"
-                title="Mark as completed"
+                title="Delete"
+                style="background: none; border: none; cursor: pointer"
               >
-                ✅
+                🗑️
               </button>
             </form>
-            <form method="POST" action="/delete/{{ loop.index0 }}">
-              <button
-                class="delete-btn"
-                type="submit"
-                title="Delete permanently"
-              >
-                ❌
-              </button>
-            </form>
           </div>
-        </li>
+          <div class="accordion-body" id="note-{{ loop.index0 }}">
+            <form method="POST" action="/update_note/{{ loop.index0 }}">
+              <input
+                type="text"
+                name="title"
+                value="{{ note.title }}"
+                required
+              />
+              <textarea name="content" required>{{ note.content }}</textarea>
+              <button type="submit">Save Note</button>
+            </form>
+            <div
+              style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem"
+            >
+              Created on {{ note.created | datetimeformat }}
+            </div>
+          </div>
+        </div>
         {% else %}
-        <li class="empty">No tasks yet. So free. So empty. So... sad.</li>
+        <div class="empty">No notes yet. So free. So empty. So... sad.</div>
         {% endfor %}
-      </ul>
+      </div>
     </div>
   </body>
 </html>
@@ -202,4 +227,42 @@
         dropdown.style.display === "none" ? "block" : "none";
     }
   }
+
+  function toggleAccordion(id) {
+    const body = document.getElementById(id);
+    if (body) {
+      const isOpening = body.style.display !== "block";
+      body.style.display = isOpening ? "block" : "none";
+      if (isOpening) {
+        body.querySelectorAll("textarea").forEach((textarea) => {
+          textarea.style.height = "auto";
+          textarea.style.height = textarea.scrollHeight + "px";
+        });
+      }
+    }
+  }
+</script>
+<style>
+  input[type="text"],
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  textarea {
+    resize: vertical;
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  function autoResizeTextarea(el) {
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  }
+
+  document.querySelectorAll("textarea").forEach((textarea) => {
+    autoResizeTextarea(textarea);
+    textarea.addEventListener("input", () => autoResizeTextarea(textarea));
+  });
 </script>

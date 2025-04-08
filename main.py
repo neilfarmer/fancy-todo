@@ -11,6 +11,7 @@ DATA_DIR = os.environ.get("DATA_DIR", "./data")
 # Define the JSON files within the data directory
 DATA_FILE = os.path.join(DATA_DIR, "todos.json")
 COMPLETED_FILE = os.path.join(DATA_DIR, "completed.json")
+NOTES_FILE = os.path.join(DATA_DIR, "notes.json")
 
 @app.template_filter("datetimeformat")
 def datetimeformat(value, format="%b %d, %Y %I:%M %p"):
@@ -29,6 +30,17 @@ def save_todos(todos):
     os.makedirs(DATA_DIR, exist_ok=True)
     with open(DATA_FILE, "w") as f:
         json.dump(todos, f, indent=2, sort_keys=True)
+
+def load_notes():
+    if os.path.exists(NOTES_FILE):
+        with open(NOTES_FILE, "r") as f:
+            return json.load(f)
+    return []
+
+def save_notes(notes):
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(NOTES_FILE, "w") as f:
+        json.dump(notes, f, indent=2, sort_keys=True)
 
 def save_completed(task):
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -102,6 +114,54 @@ def revert(task_id):
 
     return redirect(url_for("completed"))
 
+@app.route("/notes", methods=["GET", "POST"])
+def notes():
+    notes = load_notes()
+    if request.method == "POST":
+        note_title = request.form.get("note_title")
+        note_content = request.form.get("note_content")
+        if note_title and note_content:
+            notes.append({
+                "title": note_title,
+                "content": note_content,
+                "created": datetime.now().isoformat()
+            })
+            save_notes(notes)
+        return redirect(url_for("notes"))
+    return render_template("notes.html", notes=notes)
+
+@app.route("/add_note", methods=["POST"])
+def add_note():
+    note_title = request.form.get("title")
+    note_content = request.form.get("content")
+    if note_title and note_content:
+        notes = load_notes()
+        notes.append({
+            "title": note_title,
+            "content": note_content,
+            "created": datetime.now().isoformat()
+        })
+        save_notes(notes)
+    return redirect(url_for("notes"))
+
+@app.route("/update_note/<int:note_id>", methods=["POST"])
+def update_note(note_id):
+    notes = load_notes()
+    if 0 <= note_id < len(notes):
+        notes[note_id]["title"] = request.form.get("title", notes[note_id]["title"])
+        notes[note_id]["content"] = request.form.get("content", notes[note_id]["content"])
+        notes[note_id]["created"] = notes[note_id].get("created", datetime.now().isoformat())
+        save_notes(notes)
+    return redirect(url_for("notes"))
+
+@app.route("/delete_note/<int:note_id>", methods=["POST"])
+def delete_note(note_id):
+    notes = load_notes()
+    if 0 <= note_id < len(notes):
+        notes.pop(note_id)
+        save_notes(notes)
+    return redirect(url_for("notes"))
+
 # Ensure data directory and files exist
 os.makedirs(DATA_DIR, exist_ok=True)
 if not os.path.exists(DATA_FILE):
@@ -109,6 +169,9 @@ if not os.path.exists(DATA_FILE):
         json.dump([], f)
 if not os.path.exists(COMPLETED_FILE):
     with open(COMPLETED_FILE, "w") as f:
+        json.dump([], f)
+if not os.path.exists(NOTES_FILE):
+    with open(NOTES_FILE, "w") as f:
         json.dump([], f)
 
 todos = load_todos()

@@ -8,7 +8,7 @@ build:
 run:
 	poetry run python main.py
 
-run-local-docker:
+run-local-docker: clean build
 	docker run -p 5001:5001 \
 		-e DATA_DIR=$(DATA_DIR) \
 		-v $$(pwd)/$(DATA_DIR):/app/data \
